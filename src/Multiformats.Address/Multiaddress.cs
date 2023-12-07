@@ -5,6 +5,7 @@ using System.Net;
 using BinaryEncoding;
 using Multiformats.Address.Protocols;
 using Multiformats.Hash;
+using Org.BouncyCastle.Bcpg;
 
 namespace Multiformats.Address
 {
@@ -12,10 +13,22 @@ namespace Multiformats.Address
     {
         static Multiaddress()
         {
-            Setup<IP4>("ip4", 4, 32, false, ip => ip != null ? new IP4((IPAddress)ip) : new IP4());
+            Setup<IP4>("ip4", 4, 32, false, ip => {
+                if (ip != null)
+                {
+                        if (ip is IPAddress)
+                            return new IP4((IPAddress)ip);
+                        else if (ip is string)
+                            return new IP4((string)ip);
+                        else
+                            throw new Exception($"Invalid IP4 address {ip}");
+                }
+
+                return new IP4();
+            });
             Setup<IP6>("ip6", 41, 128, false, ip => ip != null ? new IP6((IPAddress)ip) : new IP6());
-            Setup<TCP>("tcp", 6, 16, false, port => port != null ? new TCP((ushort)port) : new TCP());
-            Setup<UDP>("udp", 17, 16, false, port => port != null ? new UDP((ushort)port) : new UDP());
+            Setup<TCP>("tcp", 6, 16, false, port => port != null ? new TCP((int)port) : new TCP());
+            Setup<UDP>("udp", 17, 16, false, port => port != null ? new UDP((int)port) : new UDP());
             Setup<P2P>("p2p", 420, -1, false, address => address != null ? address is Multihash ? new P2P((Multihash)address) : new P2P((string)address) : new P2P());
             Setup<IPFS>("ipfs", 421, -1, false, address => address != null ? address is Multihash ? new IPFS((Multihash)address) : new IPFS((string)address) : new IPFS());
             Setup<WebSocket>("ws", 477, 0, false, _ => new WebSocket());
@@ -25,6 +38,7 @@ namespace Multiformats.Address
             Setup<Unix>("unix", 400, -1, true, address => address != null ? new Unix((string)address) : new Unix());
             Setup<Onion>("onion", 444, 96, false, address => address != null ? new Onion((string)address) : new Onion());
             Setup<QUIC>("quic", 460, 0, false, _ => new QUIC());
+            Setup<QUICv1>("quic-v1", 461, 0, false, _ => new QUICv1());
             Setup<HTTP>("http", 480, 0, false, _ => new HTTP());
             Setup<HTTPS>("https", 443, 0, false, _ => new HTTPS());
             Setup<UTP>("utp", 301, 0, false, _ => new UTP());
@@ -90,6 +104,7 @@ namespace Multiformats.Address
         }
 
         public TProtocol Get<TProtocol>() where TProtocol : MultiaddressProtocol => Protocols.OfType<TProtocol>().SingleOrDefault();
+        public MultiaddressProtocol Get(Type multiprotocolType) => Protocols.Where(p => p.GetType() == multiprotocolType).SingleOrDefault();
 
         public void Remove<TProtocol>() where TProtocol : MultiaddressProtocol
         {
@@ -244,5 +259,20 @@ namespace Multiformats.Address
 
         public override bool Equals(object obj) => Equals((Multiaddress)obj);
         public bool Equals(Multiaddress other) => other != null && ToBytes().SequenceEqual(other.ToBytes());
+
+        public static implicit operator Multiaddress(string value)
+        {
+            return Decode(value);
+        }
+
+        public bool Has<T>() where T : MultiaddressProtocol
+            => Protocols.OfType<T>().Any();
+
+        public Multiaddress Replace<T>(object v) where T : MultiaddressProtocol
+        {
+            Remove<T>();
+            var protocolDef = _protocols.SingleOrDefault(p => p.Type == typeof(T));
+            return Add(protocolDef.Factory(v));
+        }
     }
 }
