@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -18,7 +18,7 @@ namespace Multiformats.Address.Tests
 
             Assert.Equal("/ip4/127.0.0.1/tcp/1337", result);
         }
-        
+
         [Fact]
         public void IPEndPoint_GivenIPv6Tcp_ReturnsValid()
         {
@@ -173,10 +173,10 @@ namespace Multiformats.Address.Tests
                 Multiaddress.Decode("/ip6/::1/tcp/1234/ip6/::1"),
             };
 
-            TestAddr(a[0], a, new []
+            TestAddr(a[0], a, new[]
             {
-                Multiaddress.Decode("/ip4/1.2.3.4/tcp/1234"), 
-                Multiaddress.Decode("/ip4/1.2.3.4/tcp/2345"), 
+                Multiaddress.Decode("/ip4/1.2.3.4/tcp/1234"),
+                Multiaddress.Decode("/ip4/1.2.3.4/tcp/2345"),
             });
 
             TestAddr(a[2], a, new[]

@@ -4,7 +4,7 @@ namespace Multiformats.Address.Protocols
 {
     public abstract class IP : MultiaddressProtocol
     {
-        public IPAddress Address => Value != null ? (IPAddress) Value : IPAddress.None;
+        public IPAddress Address => Value != null ? (IPAddress)Value : IPAddress.None;
 
         protected IP(string name, int code, int size)
             : base(name, code, size)

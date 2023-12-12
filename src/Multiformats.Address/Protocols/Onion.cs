@@ -7,7 +7,7 @@ namespace Multiformats.Address.Protocols
 {
     public class Onion : MultiaddressProtocol
     {
-        public string Address => Value != null ? (string) Value : string.Empty;
+        public string Address => Value != null ? (string)Value : string.Empty;
 
         public Onion()
             : base("onion", 444, 96)
@@ -49,7 +49,7 @@ namespace Multiformats.Address.Protocols
 
         public override byte[] ToBytes()
         {
-            var s = (string) Value;
+            var s = (string)Value;
             var addr = s.Split(':');
             if (addr.Length != 2)
                 throw new Exception("Failed to parse addr");

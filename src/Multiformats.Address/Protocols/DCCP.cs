@@ -1,4 +1,4 @@
-﻿namespace Multiformats.Address.Protocols
+namespace Multiformats.Address.Protocols
 {
     public class DCCP : Number
     {

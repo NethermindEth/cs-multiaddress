@@ -13,15 +13,16 @@ namespace Multiformats.Address
     {
         static Multiaddress()
         {
-            Setup<IP4>("ip4", 4, 32, false, ip => {
+            Setup<IP4>("ip4", 4, 32, false, ip =>
+            {
                 if (ip != null)
                 {
-                        if (ip is IPAddress)
-                            return new IP4((IPAddress)ip);
-                        else if (ip is string)
-                            return new IP4((string)ip);
-                        else
-                            throw new Exception($"Invalid IP4 address {ip}");
+                    if (ip is IPAddress)
+                        return new IP4((IPAddress)ip);
+                    else if (ip is string)
+                        return new IP4((string)ip);
+                    else
+                        throw new Exception($"Invalid IP4 address {ip}");
                 }
 
                 return new IP4();
@@ -70,7 +71,7 @@ namespace Multiformats.Address
                 Path = path;
                 Factory = factory;
             }
-            
+
         }
         private static readonly List<Protocol> _protocols = new List<Protocol>();
 
@@ -119,7 +120,7 @@ namespace Multiformats.Address
         private static MultiaddressProtocol CreateProtocol(string name) => _protocols.SingleOrDefault(p => p.Name == name)?.Factory(null);
         private static MultiaddressProtocol CreateProtocol(int code) => _protocols.SingleOrDefault(p => p.Code == code)?.Factory(null);
 
-        public static Multiaddress Decode(string value) => new Multiaddress().Add(DecodeProtocols(value.Split(new [] { '/' }, StringSplitOptions.RemoveEmptyEntries)).ToArray());
+        public static Multiaddress Decode(string value) => new Multiaddress().Add(DecodeProtocols(value.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)).ToArray());
         public static Multiaddress Decode(byte[] bytes) => new Multiaddress().Add(DecodeProtocols(bytes).ToArray());
 
         private static IEnumerable<MultiaddressProtocol> DecodeProtocols(params string[] parts)
@@ -187,13 +188,13 @@ namespace Multiformats.Address
             int count = 0;
             if (protocol.Size > 0)
             {
-                count = protocol.Size/8;
+                count = protocol.Size / 8;
             }
             else if (protocol.Size == -1)
             {
                 uint proxy = 0;
                 offset += Binary.Varint.Read(bytes, offset, out proxy);
-                count = (int) proxy;
+                count = (int)proxy;
             }
 
             if (count > 0)

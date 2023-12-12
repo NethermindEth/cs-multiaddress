@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using BinaryEncoding;
@@ -7,7 +7,7 @@ namespace Multiformats.Address.Protocols
 {
     public class Unix : MultiaddressProtocol
     {
-        public string Path => Value != null ? (string) Value : string.Empty;
+        public string Path => Value != null ? (string)Value : string.Empty;
 
         public Unix()
             : base("unix", 400, -1)
@@ -43,8 +43,8 @@ namespace Multiformats.Address.Protocols
 
         public override byte[] ToBytes()
         {
-            return Binary.Varint.GetBytes((uint) Encoding.UTF8.GetByteCount((string) Value))
-                .Concat(Encoding.UTF8.GetBytes((string) Value)).ToArray();
+            return Binary.Varint.GetBytes((uint)Encoding.UTF8.GetByteCount((string)Value))
+                .Concat(Encoding.UTF8.GetBytes((string)Value)).ToArray();
         }
     }
 }

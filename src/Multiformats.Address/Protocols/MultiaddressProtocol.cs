@@ -9,7 +9,7 @@ namespace Multiformats.Address.Protocols
         public int Size { get; }
         public object Value { get; protected set; }
 
-        protected static readonly byte[] EmptyBuffer = new byte[] {};
+        protected static readonly byte[] EmptyBuffer = new byte[] { };
 
         protected MultiaddressProtocol(string name, int code, int size)
         {

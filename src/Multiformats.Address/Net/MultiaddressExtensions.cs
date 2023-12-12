@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -18,7 +18,7 @@ namespace Multiformats.Address.Net
         {
             var ma = new Multiaddress();
 
-            var ip = (IPEndPoint) ep;
+            var ip = (IPEndPoint)ep;
             if (ip != null)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
@@ -27,9 +27,9 @@ namespace Multiformats.Address.Net
                     ma.Add<IP6>(ip.Address);
 
                 if (protocolType == ProtocolType.Tcp)
-                    ma.Add<TCP>((ushort) ip.Port);
+                    ma.Add<TCP>((ushort)ip.Port);
                 if (protocolType == ProtocolType.Udp)
-                    ma.Add<UDP>((ushort) ip.Port);
+                    ma.Add<UDP>((ushort)ip.Port);
             }
 
             return ma;
@@ -62,19 +62,19 @@ namespace Multiformats.Address.Net
             IPAddress addr = null;
             IP ip = ma.Protocols.OfType<IP4>().SingleOrDefault();
             if (ip != null)
-                addr = (IPAddress) ip.Value;
+                addr = (IPAddress)ip.Value;
             else
             {
                 ip = ma.Protocols.OfType<IP6>().SingleOrDefault();
                 if (ip != null)
-                    addr = (IPAddress) ip.Value;
+                    addr = (IPAddress)ip.Value;
             }
 
             int? port = null;
             Number n = ma.Protocols.OfType<TCP>().SingleOrDefault();
             if (n != null)
             {
-                port = (ushort) n.Value;
+                port = (ushort)n.Value;
                 protocolType = ProtocolType.Tcp;
                 socketType = SocketType.Stream;
             }
@@ -83,7 +83,7 @@ namespace Multiformats.Address.Net
                 n = ma.Protocols.OfType<UDP>().SingleOrDefault();
                 if (n != null)
                 {
-                    port = (ushort) n.Value;
+                    port = (ushort)n.Value;
                     protocolType = ProtocolType.Udp;
                     socketType = SocketType.Dgram;
                 }
@@ -129,29 +129,29 @@ namespace Multiformats.Address.Net
             return socket.ConnectAsync(ep)
                 .ContinueWith(_ => socket);
 #else
-            var tcs = new TaskCompletionSource<Socket>(); 
- 
-            try 
-            { 
-                socket.BeginConnect(ep, ar => 
-                { 
-                    try 
-                    { 
-                        socket.EndConnect(ar); 
-                        tcs.TrySetResult(socket); 
-                    } 
-                    catch (Exception e) 
-                    { 
-                        tcs.TrySetException(e); 
-                    } 
-                }, null); 
-            } 
-            catch (Exception e) 
-            { 
-                tcs.TrySetException(e); 
-            } 
- 
-            return tcs.Task; 
+            var tcs = new TaskCompletionSource<Socket>();
+
+            try
+            {
+                socket.BeginConnect(ep, ar =>
+                {
+                    try
+                    {
+                        socket.EndConnect(ar);
+                        tcs.TrySetResult(socket);
+                    }
+                    catch (Exception e)
+                    {
+                        tcs.TrySetException(e);
+                    }
+                }, null);
+            }
+            catch (Exception e)
+            {
+                tcs.TrySetException(e);
+            }
+
+            return tcs.Task;
 #endif
         }
 
