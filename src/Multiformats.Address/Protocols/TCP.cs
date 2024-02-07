@@ -16,19 +16,19 @@ namespace Multiformats.Address.Protocols
         public TCP(uint port)
             : this()
         {
-            Value = port;
+            Value = (int)port;
         }
 
         public TCP(short port)
             : this()
         {
-            Value = port;
+            Value = (int)port;
         }
 
         public TCP(ushort port)
             : this()
         {
-            Value = port;
+            Value = (int)port;
         }
     }
 }
