@@ -27,9 +27,9 @@ namespace Multiformats.Address.Net
                     ma.Add<IP6>(ip.Address);
 
                 if (protocolType == ProtocolType.Tcp)
-                    ma.Add<TCP>((ushort)ip.Port);
+                    ma.Add<TCP>(ip.Port);
                 if (protocolType == ProtocolType.Udp)
-                    ma.Add<UDP>((ushort)ip.Port);
+                    ma.Add<UDP>(ip.Port);
             }
 
             return ma;
@@ -74,7 +74,7 @@ namespace Multiformats.Address.Net
             Number n = ma.Protocols.OfType<TCP>().SingleOrDefault();
             if (n != null)
             {
-                port = (ushort)n.Value;
+                port = (int)n.Value;
                 protocolType = ProtocolType.Tcp;
                 socketType = SocketType.Stream;
             }
@@ -83,7 +83,7 @@ namespace Multiformats.Address.Net
                 n = ma.Protocols.OfType<UDP>().SingleOrDefault();
                 if (n != null)
                 {
-                    port = (ushort)n.Value;
+                    port = (int)n.Value;
                     protocolType = ProtocolType.Udp;
                     socketType = SocketType.Dgram;
                 }

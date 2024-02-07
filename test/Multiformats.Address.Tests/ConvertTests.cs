@@ -140,7 +140,7 @@ namespace Multiformats.Address.Tests
             var addrs = MultiaddressTools.GetInterfaceMultiaddresses();
 
             Assert.True(addrs.Count() > 1);
-#endif       
+#endif
         }
 
         private void TestAddr(Multiaddress m, Multiaddress[] input, Multiaddress[] expect)

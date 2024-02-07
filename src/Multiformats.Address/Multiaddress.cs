@@ -107,11 +107,14 @@ namespace Multiformats.Address
         public TProtocol Get<TProtocol>() where TProtocol : MultiaddressProtocol => Protocols.OfType<TProtocol>().SingleOrDefault();
         public MultiaddressProtocol Get(Type multiprotocolType) => Protocols.Where(p => p.GetType() == multiprotocolType).SingleOrDefault();
 
-        public void Remove<TProtocol>() where TProtocol : MultiaddressProtocol
+
+        public int Remove<TProtocol>() where TProtocol : MultiaddressProtocol
         {
             var protocol = Get<TProtocol>();
-            if (protocol != null)
-                Protocols.Remove(protocol);
+            var protocolIndex = Protocols.IndexOf(protocol);
+            if (protocolIndex != -1)
+                Protocols.RemoveAt(protocolIndex);
+            return protocolIndex;
         }
 
         private static bool SupportsProtocol(string name) => _protocols.Any(p => p.Name.Equals(name));
@@ -212,7 +215,7 @@ namespace Multiformats.Address
         {
             yield return p.Name;
             if (p.Value != null)
-                yield return p.Value.ToString();
+                yield return p.ToString();
         }
 
         public byte[] ToBytes() => Protocols.SelectMany(EncodeProtocol).ToArray();
@@ -269,11 +272,21 @@ namespace Multiformats.Address
         public bool Has<T>() where T : MultiaddressProtocol
             => Protocols.OfType<T>().Any();
 
-        public Multiaddress Replace<T>(object v) where T : MultiaddressProtocol
+        public Multiaddress ReplaceOrAdd<T>(object v) where T : MultiaddressProtocol
         {
-            Remove<T>();
+            int at = Remove<T>();
             var protocolDef = _protocols.SingleOrDefault(p => p.Type == typeof(T));
-            return Add(protocolDef.Factory(v));
+
+            if (at != -1)
+            {
+                Protocols.Insert(at, protocolDef.Factory(v));
+            }
+            else
+            {
+                Protocols.Add(protocolDef.Factory(v));
+            }
+
+            return this;
         }
     }
 }
