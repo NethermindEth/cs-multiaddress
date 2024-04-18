@@ -5,7 +5,6 @@ using System.Net;
 using BinaryEncoding;
 using Multiformats.Address.Protocols;
 using Multiformats.Hash;
-using Org.BouncyCastle.Bcpg;
 
 namespace Multiformats.Address
 {

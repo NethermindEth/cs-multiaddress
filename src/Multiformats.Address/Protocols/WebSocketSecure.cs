@@ -1,5 +1,3 @@
-using System;
-
 namespace Multiformats.Address.Protocols
 {
     public class WebSocketSecure : MultiaddressProtocol
