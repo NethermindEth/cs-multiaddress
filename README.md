@@ -5,8 +5,6 @@
 [![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](https://github.com/multiformats/multiformats)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
 [![](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![Travis CI](https://img.shields.io/travis/multiformats/cs-multiaddress.svg?style=flat-square&branch=master)](https://travis-ci.org/multiformats/cs-multiaddress)
-[![AppVeyor](https://img.shields.io/appveyor/ci/tabrath/cs-multiaddress/master.svg?style=flat-square)](https://ci.appveyor.com/project/tabrath/cs-multiaddress)
 [![NuGet](https://buildstats.info/nuget/Multiformats.Address)](https://www.nuget.org/packages/Multiformats.Address/)
 [![Codecov](https://img.shields.io/codecov/c/github/multiformats/cs-multiaddress/master.svg?style=flat-square)](https://codecov.io/gh/multiformats/cs-multiaddress)
 [![Libraries.io](https://img.shields.io/librariesio/github/multiformats/cs-multiaddress.svg?style=flat-square)](https://libraries.io/github/multiformats/cs-multiaddress)
