@@ -1,15 +1,8 @@
-**This project is no longer maintained and has been archived.**
+# Multiformats Multiaddr
 
-# Multiformats.Address (cs-multiaddress)
+[![Nethermind.Multiformats.Address](https://img.shields.io/nuget/v/Nethermind.Multiformats.Address)](https://www.nuget.org/packages/Nethermind.Multiformats.Address)
 
-[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)](https://github.com/multiformats/multiformats)
-[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
-[![](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![NuGet](https://buildstats.info/nuget/Multiformats.Address)](https://www.nuget.org/packages/Multiformats.Address/)
-[![Codecov](https://img.shields.io/codecov/c/github/multiformats/cs-multiaddress/master.svg?style=flat-square)](https://codecov.io/gh/multiformats/cs-multiaddress)
-[![Libraries.io](https://img.shields.io/librariesio/github/multiformats/cs-multiaddress.svg?style=flat-square)](https://libraries.io/github/multiformats/cs-multiaddress)
-
-> [Multiaddr](https://github.com/multiformats/multiaddr) implementation in C# .NET 8.
+[Multiaddr](https://github.com/multiformats/multiaddr) implementation in C#.
 
 ## Table of Contents
 
@@ -65,19 +58,3 @@ var remoteEndPoint = socket.GetRemoteMultiaddress();
 * WebRTCStar
 * WebSocket
 * WebSocket Secure
-
-## Maintainers
-
-Captain: [@tabrath](https://github.com/tabrath).
-
-## Contribute
-
-Contributions welcome. Please check out [the issues](https://github.com/multiformats/cs-multiaddress/issues).
-
-Check out our [contributing document](https://github.com/multiformats/multiformats/blob/master/contributing.md) for more information on how we work, and about contributing in general. Please be aware that all interactions related to multiformats are subject to the IPFS [Code of Conduct](https://github.com/ipfs/community/blob/master/code-of-conduct.md).
-
-Small note: If editing the README, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
-
-## License
-
-[MIT](LICENSE) © 2017 Trond Bråthen
