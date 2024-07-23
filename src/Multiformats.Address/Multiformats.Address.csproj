@@ -29,8 +29,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Nethermind.Multiformats.Base" Version="2.0.3" />
-    <PackageReference Include="Nethermind.Multiformats.Hash" Version="1.5.2" />
+    <PackageReference Include="Nethermind.Multiformats.Base" Version="2.0.3-preview.1" />
+    <PackageReference Include="Nethermind.Multiformats.Hash" Version="1.5.2-preview.1" />
   </ItemGroup>
 
   <ItemGroup>
