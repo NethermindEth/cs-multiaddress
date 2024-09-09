@@ -180,8 +180,8 @@ namespace Multiformats.Address
 
         private static int ParseProtocolCode(byte[] bytes, int offset, out short code)
         {
-            code = Binary.LittleEndian.GetInt16(bytes, offset);
-            return 2;
+            code = (short)Binary.Varint.Read(bytes, offset, out ushort length);
+            return length;
         }
 
         private static int DecodeProtocol(MultiaddressProtocol protocol, byte[] bytes, int offset)
