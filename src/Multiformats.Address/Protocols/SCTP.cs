@@ -1,6 +1,6 @@
 namespace Multiformats.Address.Protocols
 {
-    public class SCTP : Number
+    public class SCTP : PortNumber
     {
         public SCTP()
             : base("sctp", 132)

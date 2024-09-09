@@ -33,8 +33,8 @@ namespace Multiformats.Address
             Setup<IPFS>("ipfs", 421, -1, false, address => address != null ? address is Multihash ? new IPFS((Multihash)address) : new IPFS((string)address) : new IPFS());
             Setup<WebSocket>("ws", 477, 0, false, _ => new WebSocket());
             Setup<WebSocketSecure>("wss", 478, 0, false, _ => new WebSocketSecure());
-            Setup<DCCP>("dccp", 33, 16, false, port => port != null ? new DCCP((short)port) : new DCCP());
-            Setup<SCTP>("sctp", 132, 16, false, port => port != null ? new SCTP((short)port) : new SCTP());
+            Setup<DCCP>("dccp", 33, 16, false, port => port != null ? new DCCP((int)port) : new DCCP());
+            Setup<SCTP>("sctp", 132, 16, false, port => port != null ? new SCTP((int)port) : new SCTP());
             Setup<Unix>("unix", 400, -1, true, address => address != null ? new Unix((string)address) : new Unix());
             Setup<Onion>("onion", 444, 96, false, address => address != null ? new Onion((string)address) : new Onion());
             Setup<QUIC>("quic", 460, 0, false, _ => new QUIC());
@@ -156,11 +156,10 @@ namespace Multiformats.Address
         private static IEnumerable<MultiaddressProtocol> DecodeProtocols(byte[] bytes)
         {
             var offset = 0;
-            short code = 0;
             MultiaddressProtocol protocol = null;
             while (offset < bytes.Length)
             {
-                offset += ParseProtocolCode(bytes, offset, out code);
+                offset += ParseProtocolCode(bytes, offset, out ushort code);
                 if (SupportsProtocol(code))
                 {
                     offset += ParseProtocol(bytes, offset, code, out protocol);
@@ -170,7 +169,7 @@ namespace Multiformats.Address
             }
         }
 
-        private static int ParseProtocol(byte[] bytes, int offset, short code, out MultiaddressProtocol protocol)
+        private static int ParseProtocol(byte[] bytes, int offset, ushort code, out MultiaddressProtocol protocol)
         {
             var start = offset;
             protocol = CreateProtocol(code);
@@ -178,11 +177,7 @@ namespace Multiformats.Address
             return offset - start;
         }
 
-        private static int ParseProtocolCode(byte[] bytes, int offset, out short code)
-        {
-            code = (short)Binary.Varint.Read(bytes, offset, out ushort length);
-            return length;
-        }
+        private static int ParseProtocolCode(byte[] bytes, int offset, out ushort code) => Binary.Varint.Read(bytes, offset, out code);
 
         private static int DecodeProtocol(MultiaddressProtocol protocol, byte[] bytes, int offset)
         {

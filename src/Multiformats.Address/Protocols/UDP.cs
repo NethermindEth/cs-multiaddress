@@ -1,6 +1,6 @@
 namespace Multiformats.Address.Protocols
 {
-    public class UDP : Number
+    public class UDP : PortNumber
     {
         public UDP()
             : base("udp", 17)

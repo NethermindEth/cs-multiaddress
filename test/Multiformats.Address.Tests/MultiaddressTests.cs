@@ -94,7 +94,10 @@ namespace Multiformats.Address.Tests
         [InlineData("/https/dns/www.google.com")]
         public void TestConstructSucceeds(string addr)
         {
-            Multiaddress.Decode(addr);
+            Multiaddress decoded = Multiaddress.Decode(addr);
+            byte[] binaryEncoded = decoded.ToBytes();
+            Multiaddress binaryDedoded = Multiaddress.Decode(binaryEncoded);
+            Assert.Equal(decoded, binaryDedoded);
         }
 
         [Fact]

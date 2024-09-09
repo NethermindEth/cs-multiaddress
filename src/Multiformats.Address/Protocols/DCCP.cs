@@ -1,6 +1,6 @@
 namespace Multiformats.Address.Protocols
 {
-    public class DCCP : Number
+    public class DCCP : PortNumber
     {
         public DCCP()
             : base("dccp", 33)

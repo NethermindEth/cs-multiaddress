@@ -1,6 +1,6 @@
 namespace Multiformats.Address.Protocols
 {
-    public class TCP : Number
+    public class TCP : PortNumber
     {
         public TCP()
             : base("tcp", 6)

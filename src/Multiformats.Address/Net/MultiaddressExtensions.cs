@@ -71,7 +71,7 @@ namespace Multiformats.Address.Net
             }
 
             int? port = null;
-            Number n = ma.Protocols.OfType<TCP>().SingleOrDefault();
+            Protocols.PortNumber n = ma.Protocols.OfType<TCP>().SingleOrDefault();
             if (n != null)
             {
                 port = (int)n.Value;

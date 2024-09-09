@@ -27,24 +27,12 @@ namespace Multiformats.Address.Protocols
 
         public override void Decode(byte[] bytes)
         {
-            uint size = 0;
-            var n = Binary.Varint.Read(bytes, 0, out size);
-
-            if (bytes.Length - n != size)
-                throw new Exception("Inconsitent lengths");
-
-            if (size == 0)
-                throw new Exception("Invalid length");
-
-            var s = Encoding.UTF8.GetString(bytes, n, bytes.Length - n);
-
-            Value = s.Substring(1);
+            Value = Encoding.UTF8.GetString(bytes);
         }
 
         public override byte[] ToBytes()
         {
-            return Binary.Varint.GetBytes((uint)Encoding.UTF8.GetByteCount((string)Value))
-                .Concat(Encoding.UTF8.GetBytes((string)Value)).ToArray();
+            return Encoding.UTF8.GetBytes((string)Value);
         }
     }
 }
