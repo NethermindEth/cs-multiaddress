@@ -30,7 +30,6 @@ namespace Multiformats.Address
             Setup<TCP>("tcp", 6, 16, false, port => port != null ? new TCP((int)port) : new TCP());
             Setup<UDP>("udp", 17, 16, false, port => port != null ? new UDP((int)port) : new UDP());
             Setup<P2P>("p2p", 421, -1, false, address => address != null ? address is Multihash ? new P2P((Multihash)address) : new P2P((string)address) : new P2P());
-            Setup<IPFS>("ipfs", 421, -1, false, address => address != null ? address is Multihash ? new IPFS((Multihash)address) : new IPFS((string)address) : new IPFS());
             Setup<WebSocket>("ws", 477, 0, false, _ => new WebSocket());
             Setup<WebSocketSecure>("wss", 478, 0, false, _ => new WebSocketSecure());
             Setup<DCCP>("dccp", 33, 16, false, port => port != null ? new DCCP((int)port) : new DCCP());
@@ -138,7 +137,7 @@ namespace Multiformats.Address
                     if (i + 1 >= parts.Length)
                         throw new Exception("Required parameter not found");
 
-                    if (_protocols.SingleOrDefault(p => p.Code == protocol.Code).Path)
+                    if (_protocols.SingleOrDefault(p => p.Code == protocol.Code && p.Name == protocol.Name).Path)
                     {
                         protocol.Decode(string.Join("/", parts.Slice(i + 1)));
                         i = parts.Length - 1;
