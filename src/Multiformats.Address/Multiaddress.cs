@@ -137,7 +137,7 @@ namespace Multiformats.Address
                     if (i + 1 >= parts.Length)
                         throw new Exception("Required parameter not found");
 
-                    if (_protocols.SingleOrDefault(p => p.Code == protocol.Code && p.Name == protocol.Name).Path)
+                    if (_protocols.SingleOrDefault(p => p.Code == protocol.Code).Path)
                     {
                         protocol.Decode(string.Join("/", parts.Slice(i + 1)));
                         i = parts.Length - 1;
