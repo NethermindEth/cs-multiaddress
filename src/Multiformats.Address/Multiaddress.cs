@@ -256,6 +256,9 @@ namespace Multiformats.Address
 
         public override bool Equals(object obj) => Equals((Multiaddress)obj);
         public bool Equals(Multiaddress other) => other != null && ToBytes().SequenceEqual(other.ToBytes());
+        public static bool operator ==(Multiaddress b1, Multiaddress b2) => b1 is null ? b2 is null : b1.Equals(b2);
+        public static bool operator !=(Multiaddress b1, Multiaddress b2) => !(b1 == b2);
+
 
         public static implicit operator Multiaddress(string value)
         {
@@ -281,5 +284,7 @@ namespace Multiformats.Address
 
             return this;
         }
+
+
     }
 }

@@ -21,9 +21,9 @@ namespace Multiformats.Address.Net
             var ip = (IPEndPoint)ep;
             if (ip != null)
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                if (ip.AddressFamily == AddressFamily.InterNetwork || ip.Address.IsIPv4MappedToIPv6)
                     ma.Add<IP4>(ip.Address.MapToIPv4());
-                if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+                else if (ip.AddressFamily == AddressFamily.InterNetworkV6)
                     ma.Add<IP6>(ip.Address.MapToIPv6());
 
                 if (transportType == ProtocolType.Tcp)
