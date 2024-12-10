@@ -14,7 +14,7 @@ namespace Multiformats.Address.Net
         public static Multiaddress GetLocalMultiaddress(this Socket socket) => socket.LocalEndPoint.ToMultiaddress(socket.ProtocolType);
         public static Multiaddress GetRemoteMultiaddress(this Socket socket) => socket.RemoteEndPoint.ToMultiaddress(socket.ProtocolType);
 
-        public static Multiaddress ToMultiaddress(this EndPoint ep, ProtocolType protocolType)
+        public static Multiaddress ToMultiaddress(this EndPoint ep, ProtocolType transportType)
         {
             var ma = new Multiaddress();
 
@@ -22,13 +22,13 @@ namespace Multiformats.Address.Net
             if (ip != null)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
-                    ma.Add<IP4>(ip.Address);
+                    ma.Add<IP4>(ip.Address.MapToIPv4());
                 if (ip.AddressFamily == AddressFamily.InterNetworkV6)
-                    ma.Add<IP6>(ip.Address);
+                    ma.Add<IP6>(ip.Address.MapToIPv6());
 
-                if (protocolType == ProtocolType.Tcp)
+                if (transportType == ProtocolType.Tcp)
                     ma.Add<TCP>(ip.Port);
-                if (protocolType == ProtocolType.Udp)
+                if (transportType == ProtocolType.Udp)
                     ma.Add<UDP>(ip.Port);
             }
 
