@@ -45,6 +45,7 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
         Setup<DNS>("dns", 53, -1, false, address => address != null ? new DNS((string)address) : new DNS());
         Setup<DNS4>("dns4", 54, -1, false, address => address != null ? new DNS4((string)address) : new DNS4());
         Setup<DNS6>("dns6", 55, -1, false, address => address != null ? new DNS6((string)address) : new DNS6());
+        Setup<DnsAddr>("dnsaddr", 56, -1, false, address => address != null ? new DnsAddr((string)address) : new DnsAddr());
         Setup<P2PCircuit>("p2p-circuit", 290, 0, false, _ => new P2PCircuit());
         Setup<P2PWebRTCStar>("p2p-webrtc-star", 275, 0, false, _ => new P2PWebRTCStar());
         Setup<P2PWebRTCDirect>("p2p-webrtc-direct", 276, 0, false, _ => new P2PWebRTCStar());
@@ -79,7 +80,7 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
         _protocols.Add(new Protocol(name, code, size, typeof(TProtocol), path, factory));
     }
 
-    public List<MultiaddressProtocol> Protocols { get; }
+    public List<MultiaddressProtocol> Protocols { get; init; }
 
     public Multiaddress()
     {
@@ -272,6 +273,28 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
     {
         int at = Remove<T>();
         var protocolDef = _protocols.SingleOrDefault(p => p.Type == typeof(T));
+
+        if (at != -1)
+        {
+            Protocols.Insert(at, protocolDef.Factory(v));
+        }
+        else
+        {
+            Protocols.Add(protocolDef.Factory(v));
+        }
+
+        return this;
+    }
+
+    public Multiaddress Clone()
+    {
+        return new Multiaddress() { Protocols = Protocols.ToList() };
+    }
+
+    public Multiaddress Replace<TOld, TNew>(object v) where TOld : MultiaddressProtocol where TNew : MultiaddressProtocol
+    {
+        int at = Remove<TOld>();
+        var protocolDef = _protocols.SingleOrDefault(p => p.Type == typeof(TNew));
 
         if (at != -1)
         {
