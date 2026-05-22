@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Multiformats.Base;
 using Multiformats.Address.Protocols;
 using Org.BouncyCastle.Utilities.Encoders;
 using Xunit;
@@ -98,6 +99,21 @@ public class MultiaddressTests
         byte[] binaryEncoded = decoded.ToBytes();
         Multiaddress binaryDedoded = Multiaddress.Decode(binaryEncoded);
         Assert.Equal(decoded, binaryDedoded);
+    }
+
+    [Fact]
+    public void TestWebRtcDirectWithCerthash()
+    {
+        string certhash = Multibase.Encode(MultibaseEncoding.Base64Url, Enumerable.Range(1, 34).Select(i => (byte)i).ToArray());
+        string addr = $"/ip4/127.0.0.1/udp/1234/webrtc-direct/certhash/{certhash}";
+
+        Multiaddress decoded = Multiaddress.Decode(addr);
+        byte[] binaryEncoded = decoded.ToBytes();
+        Multiaddress binaryDedoded = Multiaddress.Decode(binaryEncoded);
+
+        Assert.Equal(decoded, binaryDedoded);
+        Assert.Equal(certhash, decoded.Protocols.OfType<Certhash>().Single().ToString());
+        Assert.Contains(decoded.Protocols, p => p is WebrtcDirect);
     }
 
     [Fact]

@@ -38,6 +38,9 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
         Setup<Onion>("onion", 444, 96, false, address => address != null ? new Onion((string)address) : new Onion());
         Setup<QUIC>("quic", 460, 0, false, _ => new QUIC());
         Setup<QUICv1>("quic-v1", 461, 0, false, _ => new QUICv1());
+        Setup<WebrtcDirect>("webrtc-direct", 280, 0, false, _ => new WebrtcDirect());
+        Setup<Webrtc>("webrtc", 281, 0, false, _ => new Webrtc());
+        Setup<Certhash>("certhash", 466, -1, false, address => address != null ? new Certhash((string)address) : new Certhash());
         Setup<HTTP>("http", 480, 0, false, _ => new HTTP());
         Setup<HTTPS>("https", 443, 0, false, _ => new HTTPS());
         Setup<UTP>("utp", 301, 0, false, _ => new UTP());
