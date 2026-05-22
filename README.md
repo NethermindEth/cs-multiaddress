@@ -15,11 +15,11 @@
 
 ## Install
 
-    PM> Install-Package Multiformats.Address
+    PM> Install-Package Nethermind.Multiformats.Address
 
 ---
 
-    dotnet add package Multiformats.Address
+    dotnet add package Nethermind.Multiformats.Address
 
 ## Usage
 ``` cs
