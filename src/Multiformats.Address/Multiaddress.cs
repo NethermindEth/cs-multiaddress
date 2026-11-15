@@ -1,7 +1,10 @@
 using System;
+using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using BinaryEncoding;
 using Multiformats.Address.Protocols;
 using Multiformats.Hash;
@@ -75,13 +78,23 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
         }
 
     }
-    private static readonly List<Protocol> _protocols = new List<Protocol>();
+    private const int StackBufferSize = 256;
+
+    private static readonly Dictionary<string, Protocol> _protocolsByName = new Dictionary<string, Protocol>();
+    private static readonly Dictionary<int, Protocol> _protocolsByCode = new Dictionary<int, Protocol>();
+    private static readonly Dictionary<Type, Protocol> _protocolsByType = new Dictionary<Type, Protocol>();
 
     private static void Setup<TProtocol>(string name, int code, int size, bool path, Func<object, MultiaddressProtocol> factory)
         where TProtocol : MultiaddressProtocol
     {
-        _protocols.Add(new Protocol(name, code, size, typeof(TProtocol), path, factory));
+        Protocol protocol = new Protocol(name, code, size, typeof(TProtocol), path, factory);
+        _protocolsByName.Add(name, protocol);
+        _protocolsByCode.Add(code, protocol);
+        _protocolsByType.Add(protocol.Type, protocol);
     }
+
+    private static Protocol FindByType(Type type) => _protocolsByType.TryGetValue(type, out Protocol protocol) ? protocol : null;
+    private static Protocol FindByCode(int code) => _protocolsByCode.TryGetValue(code, out Protocol protocol) ? protocol : null;
 
     public List<MultiaddressProtocol> Protocols { get; init; }
 
@@ -93,7 +106,7 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
     public Multiaddress Add<TProtocol>(object value)
         where TProtocol : MultiaddressProtocol
     {
-        var proto = _protocols.SingleOrDefault(p => p.Type == typeof(TProtocol));
+        Protocol proto = FindByType(typeof(TProtocol));
         Protocols.Add(proto.Factory(value));
         return this;
     }
@@ -106,7 +119,25 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
         return this;
     }
 
-    public TProtocol Get<TProtocol>() where TProtocol : MultiaddressProtocol => Protocols.OfType<TProtocol>().SingleOrDefault();
+    public TProtocol Get<TProtocol>() where TProtocol : MultiaddressProtocol
+    {
+        TProtocol found = null;
+        bool hasMatch = false;
+        foreach (MultiaddressProtocol protocol in Protocols)
+        {
+            if (protocol is TProtocol match)
+            {
+                if (hasMatch)
+                    throw new InvalidOperationException("Sequence contains more than one element");
+
+                found = match;
+                hasMatch = true;
+            }
+        }
+
+        return found;
+    }
+
     public MultiaddressProtocol Get(Type multiprotocolType) => Protocols.Where(p => p.GetType() == multiprotocolType).SingleOrDefault();
 
 
@@ -119,29 +150,35 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
         return protocolIndex;
     }
 
-    private static bool SupportsProtocol(string name) => _protocols.Any(p => p.Name.Equals(name));
-    private static bool SupportsProtocol(int code) => _protocols.Any(p => p.Code.Equals(code));
-
-    private static MultiaddressProtocol CreateProtocol(string name) => _protocols.SingleOrDefault(p => p.Name == name)?.Factory(null);
-    private static MultiaddressProtocol CreateProtocol(int code) => _protocols.SingleOrDefault(p => p.Code == code)?.Factory(null);
-
-    public static Multiaddress Decode(string value) => new Multiaddress().Add(DecodeProtocols(value.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)).ToArray());
-    public static Multiaddress Decode(byte[] bytes) => new Multiaddress().Add(DecodeProtocols(bytes).ToArray());
-
-    private static IEnumerable<MultiaddressProtocol> DecodeProtocols(params string[] parts)
+    public static Multiaddress Decode(string value)
     {
-        for (var i = 0; i < parts.Length; i++)
+        string[] parts = value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        Multiaddress result = new Multiaddress();
+        DecodeProtocols(parts, result.Protocols);
+        return result;
+    }
+
+    public static Multiaddress Decode(byte[] bytes)
+    {
+        Multiaddress result = new Multiaddress();
+        DecodeProtocols(bytes, result.Protocols);
+        return result;
+    }
+
+    private static void DecodeProtocols(string[] parts, List<MultiaddressProtocol> target)
+    {
+        for (int i = 0; i < parts.Length; i++)
         {
-            if (!SupportsProtocol(parts[i]))
+            if (!_protocolsByName.TryGetValue(parts[i], out Protocol definition))
                 throw new NotSupportedException(parts[i]);
 
-            var protocol = CreateProtocol(parts[i]);
+            MultiaddressProtocol protocol = definition.Factory(null);
             if (protocol.Size != 0)
             {
                 if (i + 1 >= parts.Length)
                     throw new Exception("Required parameter not found");
 
-                if (_protocols.SingleOrDefault(p => p.Code == protocol.Code).Path)
+                if (FindByCode(protocol.Code).Path)
                 {
                     protocol.Decode(string.Join("/", parts.Slice(i + 1)));
                     i = parts.Length - 1;
@@ -152,32 +189,23 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
                 }
             }
 
-            yield return protocol;
+            target.Add(protocol);
         }
     }
 
-    private static IEnumerable<MultiaddressProtocol> DecodeProtocols(byte[] bytes)
+    private static void DecodeProtocols(byte[] bytes, List<MultiaddressProtocol> target)
     {
-        var offset = 0;
-        MultiaddressProtocol protocol = null;
+        int offset = 0;
         while (offset < bytes.Length)
         {
             offset += ParseProtocolCode(bytes, offset, out ushort code);
-            if (SupportsProtocol(code))
+            if (_protocolsByCode.TryGetValue(code, out Protocol definition))
             {
-                offset += ParseProtocol(bytes, offset, code, out protocol);
-
-                yield return protocol;
+                MultiaddressProtocol protocol = definition.Factory(null);
+                offset += DecodeProtocol(protocol, bytes, offset);
+                target.Add(protocol);
             }
         }
-    }
-
-    private static int ParseProtocol(byte[] bytes, int offset, ushort code, out MultiaddressProtocol protocol)
-    {
-        var start = offset;
-        protocol = CreateProtocol(code);
-        offset += DecodeProtocol(protocol, bytes, offset);
-        return offset - start;
     }
 
     private static int ParseProtocolCode(byte[] bytes, int offset, out ushort code) => Binary.Varint.Read(bytes, offset, out code);
@@ -215,23 +243,144 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
             yield return p.ToString();
     }
 
-    public byte[] ToBytes() => Protocols.SelectMany(EncodeProtocol).ToArray();
-
-    private static IEnumerable<byte> EncodeProtocol(MultiaddressProtocol p)
+    public byte[] ToBytes()
     {
-        var code = Binary.Varint.GetBytes((ulong)p.Code);
+        byte[][] values = null;
+        try
+        {
+            int length = MeasureEncoding(ref values);
+            if (length == 0)
+                return Array.Empty<byte>();
 
-        if (p.Size == 0)
-            return code;
+            byte[] result = new byte[length];
+            WriteEncoding(result, values);
+            return result;
+        }
+        finally
+        {
+            ReturnValues(values);
+        }
+    }
 
-        var bytes = p.ToBytes();
+    private static bool IsAddress(Type type) => type == typeof(IP4) || type == typeof(IP6);
 
-        if (p.Size > 0)
-            return code.Concat(bytes);
+    private static bool IsPort(Type type) => type == typeof(TCP) || type == typeof(UDP) || type == typeof(DCCP) || type == typeof(SCTP);
 
-        var prefix = Binary.Varint.GetBytes((ulong)bytes.Length);
+    private static int AddressLength(IPAddress address) => address.AddressFamily == AddressFamily.InterNetworkV6 ? 16 : 4;
 
-        return code.Concat(prefix).Concat(bytes);
+    private int MeasureEncoding(ref byte[][] values)
+    {
+        List<MultiaddressProtocol> protocols = Protocols;
+        int length = 0;
+        for (int i = 0; i < protocols.Count; i++)
+        {
+            MultiaddressProtocol p = protocols[i];
+            length += VarintLength((ulong)p.Code);
+            if (p.Size == 0)
+                continue;
+
+            int valueLength;
+            Type type = p.GetType();
+            if (IsAddress(type))
+            {
+                valueLength = AddressLength(((IP)p).Address);
+            }
+            else if (IsPort(type))
+            {
+                valueLength = sizeof(ushort);
+            }
+            else if (type == typeof(P2P))
+            {
+                valueLength = p.ToBytes().Length;
+            }
+            else
+            {
+                values ??= ArrayPool<byte[]>.Shared.Rent(protocols.Count);
+                byte[] bytes = p.ToBytes();
+                values[i] = bytes;
+                valueLength = bytes.Length;
+            }
+
+            if (p.Size < 0)
+                length += VarintLength((ulong)valueLength);
+
+            length += valueLength;
+        }
+
+        return length;
+    }
+
+    private void WriteEncoding(Span<byte> buffer, byte[][] values)
+    {
+        List<MultiaddressProtocol> protocols = Protocols;
+        int offset = 0;
+        for (int i = 0; i < protocols.Count; i++)
+        {
+            MultiaddressProtocol p = protocols[i];
+            offset += WriteVarint(buffer.Slice(offset), (ulong)p.Code);
+            if (p.Size == 0)
+                continue;
+
+            Type type = p.GetType();
+            if (IsAddress(type))
+            {
+                IPAddress address = ((IP)p).Address;
+                if (p.Size < 0)
+                    offset += WriteVarint(buffer.Slice(offset), (ulong)AddressLength(address));
+
+                address.TryWriteBytes(buffer.Slice(offset), out int written);
+                offset += written;
+            }
+            else if (IsPort(type))
+            {
+                ushort port = (ushort)(int)p.Value;
+                if (p.Size < 0)
+                    offset += WriteVarint(buffer.Slice(offset), sizeof(ushort));
+
+                BinaryPrimitives.WriteUInt16BigEndian(buffer.Slice(offset), port);
+                offset += sizeof(ushort);
+            }
+            else
+            {
+                byte[] bytes = type == typeof(P2P) ? p.ToBytes() : values[i];
+                if (p.Size < 0)
+                    offset += WriteVarint(buffer.Slice(offset), (ulong)bytes.Length);
+
+                bytes.CopyTo(buffer.Slice(offset));
+                offset += bytes.Length;
+            }
+        }
+    }
+
+    private static void ReturnValues(byte[][] values)
+    {
+        if (values != null)
+            ArrayPool<byte[]>.Shared.Return(values, clearArray: true);
+    }
+
+    private static int VarintLength(ulong value)
+    {
+        int length = 1;
+        while (value >= 0x80)
+        {
+            value >>= 7;
+            length++;
+        }
+
+        return length;
+    }
+
+    private static int WriteVarint(Span<byte> buffer, ulong value)
+    {
+        int offset = 0;
+        while (value >= 0x80)
+        {
+            buffer[offset++] = (byte)(value | 0x80);
+            value >>= 7;
+        }
+
+        buffer[offset++] = (byte)value;
+        return offset;
     }
 
     public IEnumerable<Multiaddress> Split() => Protocols.Select(p => new Multiaddress().Add(p));
@@ -270,12 +419,20 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
     }
 
     public bool Has<T>() where T : MultiaddressProtocol
-        => Protocols.OfType<T>().Any();
+    {
+        foreach (MultiaddressProtocol protocol in Protocols)
+        {
+            if (protocol is T)
+                return true;
+        }
+
+        return false;
+    }
 
     public Multiaddress ReplaceOrAdd<T>(object v) where T : MultiaddressProtocol
     {
         int at = Remove<T>();
-        var protocolDef = _protocols.SingleOrDefault(p => p.Type == typeof(T));
+        Protocol protocolDef = FindByType(typeof(T));
 
         if (at != -1)
         {
@@ -297,7 +454,7 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
     public Multiaddress Replace<TOld, TNew>(object v) where TOld : MultiaddressProtocol where TNew : MultiaddressProtocol
     {
         int at = Remove<TOld>();
-        var protocolDef = _protocols.SingleOrDefault(p => p.Type == typeof(TNew));
+        Protocol protocolDef = FindByType(typeof(TNew));
 
         if (at != -1)
         {
@@ -313,5 +470,41 @@ public class Multiaddress : IEquatable<Multiaddress>, IComparable, IComparable<M
 
     public int CompareTo(object obj) => obj is Multiaddress other ? CompareTo(other) : 1;
 
-    public int CompareTo(Multiaddress other) => other is not null ? ToBytes().AsSpan().SequenceCompareTo(other.ToBytes().AsSpan()) : 1;
+    public int CompareTo(Multiaddress other)
+    {
+        if (other is null)
+            return 1;
+
+        byte[][] values = null;
+        byte[][] otherValues = null;
+        byte[] rented = null;
+        byte[] otherRented = null;
+        try
+        {
+            int length = MeasureEncoding(ref values);
+            Span<byte> buffer = length <= StackBufferSize
+                ? stackalloc byte[StackBufferSize]
+                : (rented = ArrayPool<byte>.Shared.Rent(length));
+            buffer = buffer.Slice(0, length);
+            WriteEncoding(buffer, values);
+
+            int otherLength = other.MeasureEncoding(ref otherValues);
+            Span<byte> otherBuffer = otherLength <= StackBufferSize
+                ? stackalloc byte[StackBufferSize]
+                : (otherRented = ArrayPool<byte>.Shared.Rent(otherLength));
+            otherBuffer = otherBuffer.Slice(0, otherLength);
+            other.WriteEncoding(otherBuffer, otherValues);
+
+            return ((ReadOnlySpan<byte>)buffer).SequenceCompareTo(otherBuffer);
+        }
+        finally
+        {
+            ReturnValues(values);
+            ReturnValues(otherValues);
+            if (rented != null)
+                ArrayPool<byte>.Shared.Return(rented);
+            if (otherRented != null)
+                ArrayPool<byte>.Shared.Return(otherRented);
+        }
+    }
 }
